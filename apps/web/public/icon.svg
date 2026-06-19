@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Spend It Slow">
+  <rect width="512" height="512" rx="112" fill="#f5f2ea"/>
+  <g fill="none" stroke="#3f7a6a" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M170 132 H342"/>
+    <path d="M170 380 H342"/>
+    <path d="M186 132 C186 214 256 224 256 256 C256 288 186 298 186 380"/>
+    <path d="M326 132 C326 214 256 224 256 256 C256 288 326 298 326 380"/>
+  </g>
+  <path d="M214 188 C232 214 280 214 298 188 Z" fill="#3f7a6a"/>
+  <circle cx="256" cy="318" r="12" fill="#3f7a6a"/>
+</svg>

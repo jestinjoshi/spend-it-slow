@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# builds
+dist/
+.next/
+.output/
+.turbo/
+out/
+.wxt/
+web-ext-artifacts/
+
+# generated service worker (Serwist swDest)
+apps/web/public/sw.js
+apps/web/public/sw.js.map
+apps/web/public/swe-worker-*.js
+
+# test
+coverage/
+
+# env / local
+.env
+.env.*
+!.env.example
+*.local
+
+# editor / os
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
