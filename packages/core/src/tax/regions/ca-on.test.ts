@@ -2,17 +2,34 @@ import { describe, expect, it } from "vitest";
 import { caOn } from "./ca-on";
 
 /**
- * These assert INVARIANTS, not exact dollar amounts — the example constants in
- * ca-on.ts are placeholders to be verified against the CRA. When you confirm
- * real numbers, add a few exact fixtures here (known gross -> known net).
+ * Mixes invariant checks with exact 2026 fixtures. The fixture figures are
+ * hand-calculated from the published 2026 federal/Ontario rates so they catch
+ * any accidental change to the constants. Recompute them whenever the tax year
+ * is updated.
  */
 describe("caOn region", () => {
   it("exposes the metadata the UI needs", () => {
     expect(caOn.id).toBe("ca-on");
     expect(caOn.currency).toBe("CAD");
-    expect(caOn.taxYear).toBeGreaterThan(2020);
+    expect(caOn.taxYear).toBe(2026);
     expect(() => new Date(caOn.validUntil).toISOString()).not.toThrow();
     expect(caOn.source).toMatch(/^https:\/\//);
+  });
+
+  it("matches the hand-calculated 2026 fixture for a $80,000 salary", () => {
+    const r = caOn.computeNetAnnual(80_000);
+    // EI maxed (68,900 × 1.63%); CPP base maxed (71,100 × 5.95%) + CPP2 (5,400 × 4%).
+    expect(r.breakdown.ei).toBeCloseTo(1_123.07, 2);
+    expect(r.breakdown.cpp).toBeCloseTo(4_446.45, 2);
+    // federal 10,292.73 + ON 4,454.52 + CPP 4,446.45 + EI 1,123.07 deductions.
+    expect(r.netAnnual).toBeCloseTo(59_683.23, 1);
+    expect(r.effectiveRate).toBeCloseTo(0.254, 3);
+  });
+
+  it("applies CPP2 above the YMPE (max $416 at/above YAMPE)", () => {
+    const r = caOn.computeNetAnnual(120_000);
+    // CPP base maxes at 4,230.45; CPP2 maxes at 416 → 4,646.45.
+    expect(r.breakdown.cpp).toBeCloseTo(4_646.45, 2);
   });
 
   it("returns zero tax for zero income", () => {

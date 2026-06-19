@@ -2,43 +2,67 @@ import { cappedContribution, nonRefundableCredit, progressiveTax } from "../engi
 import type { TaxBracket, TaxRegion } from "../types";
 
 /**
- * Ontario, Canada — reference implementation.
+ * Ontario, Canada — 2026 tax year.
  *
- * ⚠️ The constants below are EXAMPLE values modelled on the 2024 tax year and
- * are NOT guaranteed accurate. Verify every number against the CRA and Ontario
- * Ministry of Finance before relying on this, and bump `taxYear` / `validUntil`
- * when you update them. This intentionally simplifies some rules (notably the
- * CPP2 second ceiling and the federal BPA phase-out at high incomes).
+ * Figures below are the indexed 2026 federal and Ontario amounts (CRA 2.0%
+ * federal / 1.9% Ontario indexation). Sources:
+ *  - Federal brackets + BPA, CPP/EI: canada.ca (CRA)
+ *  - Ontario brackets, surtax, BPA: Ontario Ministry of Finance
+ *  - Cross-checked against taxtips.ca 2026 tables.
+ *
+ * This estimates take-home pay = gross − (federal income tax + Ontario income
+ * tax incl. surtax + CPP base + CPP2 + EI). It intentionally does NOT model the
+ * federal CPP/EI tax credits or the enhanced-CPP income deduction, so it errs
+ * slightly high on tax (a little low on net) — fine for a "what does it cost"
+ * estimate. Update these constants and `validUntil` each tax year.
  */
 
+// --- Federal (2026) ---
 const FEDERAL_BRACKETS: TaxBracket[] = [
-  { upTo: 55_867, rate: 0.15 },
-  { upTo: 111_733, rate: 0.205 },
-  { upTo: 173_205, rate: 0.26 },
-  { upTo: 246_752, rate: 0.29 },
+  { upTo: 58_523, rate: 0.14 },
+  { upTo: 117_045, rate: 0.205 },
+  { upTo: 181_440, rate: 0.26 },
+  { upTo: 258_482, rate: 0.29 },
   { upTo: null, rate: 0.33 },
 ];
+const FEDERAL_LOWEST_RATE = 0.14;
+// Basic personal amount phases from the max down to the min across the 2nd-top
+// bracket ($181,440 → $258,482) for high earners.
+const FEDERAL_BPA_MAX = 16_452;
+const FEDERAL_BPA_MIN = 14_829;
+const FEDERAL_BPA_PHASE_START = 181_440;
+const FEDERAL_BPA_PHASE_END = 258_482;
 
+function federalBpa(income: number): number {
+  if (income <= FEDERAL_BPA_PHASE_START) return FEDERAL_BPA_MAX;
+  if (income >= FEDERAL_BPA_PHASE_END) return FEDERAL_BPA_MIN;
+  const phased =
+    (FEDERAL_BPA_MAX - FEDERAL_BPA_MIN) *
+    ((income - FEDERAL_BPA_PHASE_START) / (FEDERAL_BPA_PHASE_END - FEDERAL_BPA_PHASE_START));
+  return FEDERAL_BPA_MAX - phased;
+}
+
+// --- Ontario (2026) ---
 const ONTARIO_BRACKETS: TaxBracket[] = [
-  { upTo: 51_446, rate: 0.0505 },
-  { upTo: 102_894, rate: 0.0915 },
+  { upTo: 53_891, rate: 0.0505 },
+  { upTo: 107_785, rate: 0.0915 },
   { upTo: 150_000, rate: 0.1116 },
   { upTo: 220_000, rate: 0.1216 },
   { upTo: null, rate: 0.1316 },
 ];
+const ONTARIO_LOWEST_RATE = 0.0505;
+const ONTARIO_BPA = 12_989;
 
-const FEDERAL_BPA = 15_705; // basic personal amount, credited at lowest rate
-const ONTARIO_BPA = 12_399;
-
-// Ontario surtax on provincial tax above two thresholds.
-const SURTAX_T1 = 5_554;
+// Ontario surtax on provincial tax above two thresholds (2026).
+const SURTAX_T1 = 5_818;
 const SURTAX_R1 = 0.2;
-const SURTAX_T2 = 7_108;
+const SURTAX_T2 = 7_446;
 const SURTAX_R2 = 0.36;
 
-// CPP (simplified: single ceiling, ignores CPP2) and EI for 2024.
-const CPP = { rate: 0.0595, exemption: 3_500, ceiling: 68_500 };
-const EI = { rate: 0.0166, maxInsurable: 63_200 };
+// --- Payroll (2026) ---
+const CPP = { rate: 0.0595, exemption: 3_500, ympe: 74_600 };
+const CPP2 = { rate: 0.04, ympe: 74_600, yampe: 85_000 };
+const EI = { rate: 0.0163, maxInsurable: 68_900 };
 
 function ontarioSurtax(provincialBaseTax: number): number {
   let surtax = 0;
@@ -51,34 +75,37 @@ export const caOn: TaxRegion = {
   id: "ca-on",
   label: "Ontario, Canada",
   currency: "CAD",
-  taxYear: 2024,
-  validUntil: "2025-12-31",
-  source: "https://www.canada.ca/en/revenue-agency/services/tax/individuals.html",
+  taxYear: 2026,
+  validUntil: "2026-12-31",
+  source:
+    "https://www.canada.ca/en/revenue-agency/services/tax/individuals/frequently-asked-questions-individuals/canadian-income-tax-rates-individuals-current-previous-years.html",
   computeNetAnnual(grossAnnual) {
     const gross = Math.max(0, grossAnnual);
 
     const federal = nonRefundableCredit(
       progressiveTax(gross, FEDERAL_BRACKETS),
-      FEDERAL_BPA,
-      0.15,
+      federalBpa(gross),
+      FEDERAL_LOWEST_RATE,
     );
 
     const ontarioBase = nonRefundableCredit(
       progressiveTax(gross, ONTARIO_BRACKETS),
       ONTARIO_BPA,
-      0.0505,
+      ONTARIO_LOWEST_RATE,
     );
     const provincial = ontarioBase + ontarioSurtax(ontarioBase);
 
-    const cpp = cappedContribution(gross, CPP.rate, CPP.exemption, CPP.ceiling);
+    const cppBase = cappedContribution(gross, CPP.rate, CPP.exemption, CPP.ympe);
+    const cpp2 = cappedContribution(gross, CPP2.rate, CPP2.ympe, CPP2.yampe);
+    const cpp = cppBase + cpp2;
+
     const ei = Math.min(gross, EI.maxInsurable) * EI.rate;
 
     const total = federal + provincial + cpp + ei;
-    const netAnnual = gross - total;
 
     return {
       grossAnnual: gross,
-      netAnnual,
+      netAnnual: gross - total,
       breakdown: { federal, provincial, cpp, ei },
       effectiveRate: gross > 0 ? total / gross : 0,
     };
