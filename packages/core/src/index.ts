@@ -12,20 +12,31 @@ export { convertCurrency, isRateTableStale } from "./currency";
 // Headline calculation
 export type {
   IncomeProfile,
+  BlendSource,
+  BlendedIncome,
+  MultiPriceResult,
   PriceToHoursInput,
   PriceToHoursResult,
 } from "./convert";
-export { priceToHours, netHourlyForIncome } from "./convert";
+export {
+  priceToHours,
+  priceToHoursMulti,
+  netHourlyForIncome,
+  netAnnualForIncome,
+  blendIncome,
+} from "./convert";
 
 // Formatting
 export type { HumanDuration } from "./format";
 export { hoursToHuman, hoursAsYearFraction, formatMoney } from "./format";
 
 // Validation schemas
-export type { IncomeSettings, PriceInput } from "./schema";
+export type { IncomeSettings, IncomeSource, IncomeSetup, PriceInput } from "./schema";
 export {
   workScheduleSchema,
   incomeSettingsSchema,
+  incomeSourceSchema,
+  incomeSetupSchema,
   priceInputSchema,
 } from "./schema";
 

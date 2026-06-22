@@ -5,7 +5,7 @@ import { Serwist } from "serwist";
 // The service worker runs in a worker context, not the DOM.
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
-    // Injected at build time by @serwist/next — the list of files to precache.
+    // Injected at build time by @serwist/next: the list of files to precache.
     __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
   }
 }

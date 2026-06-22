@@ -1,6 +1,6 @@
 # Adding a tax region
 
-After-tax support is modular — every region is a small, self-contained plugin
+After-tax support is modular: every region is a small, self-contained plugin
 that implements one interface. Adding your country/state/province does **not**
 require touching the UI or the calculation engine.
 
@@ -27,9 +27,9 @@ require touching the UI or the calculation engine.
    no `localStorage`. Use the helpers in
    [`engine.ts`](../packages/core/src/tax/engine.ts):
 
-   - `progressiveTax(income, brackets)` — marginal bracket math.
-   - `nonRefundableCredit(tax, amount, rate)` — basic personal amounts.
-   - `cappedContribution(income, rate, floor, ceiling)` — payroll levies
+   - `progressiveTax(income, brackets)`: marginal bracket math.
+   - `nonRefundableCredit(tax, amount, rate)`: basic personal amounts.
+   - `cappedContribution(income, rate, floor, ceiling)`: payroll levies
      (CPP/EI, Social Security, NI, etc.).
 
    Return a `breakdown` object so the UI can show where the money goes
@@ -44,7 +44,7 @@ require touching the UI or the calculation engine.
    Copy `ca-on.test.ts` next to your file. CI will not accept a region without
    tests. At minimum assert the invariants (net < gross, zero income → zero
    tax, progressivity). If you can cite official "for income X, tax is Y"
-   figures, add them as exact fixtures — those are the most valuable tests.
+   figures, add them as exact fixtures. Those are the most valuable tests.
 
 ## Guidelines
 

@@ -18,6 +18,28 @@ export const incomeSettingsSchema = z.object({
   regionId: z.string().trim().optional(),
 });
 
+/** A single named income source. `taxed` decides whether the residency tax applies. */
+export const incomeSourceSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().trim().min(1, "Give this income a name").max(40),
+  amount: z.coerce.number().positive("Enter an amount greater than 0"),
+  period: z.enum(PAY_PERIODS),
+  currency: z.string().trim().length(3, "Use a 3-letter currency code").toUpperCase(),
+  schedule: workScheduleSchema,
+  /** true = gross income taxed at the residency; false = already take-home. */
+  taxed: z.boolean(),
+});
+
+/**
+ * The full income setup: a single tax residency applied to all gross income,
+ * plus one or more income sources. An empty `residencyRegionId` means no tax is
+ * applied (every amount is treated as take-home).
+ */
+export const incomeSetupSchema = z.object({
+  residencyRegionId: z.string().trim().optional(),
+  sources: z.array(incomeSourceSchema).min(1, "Add at least one income source"),
+});
+
 /** The price entered on the calculator's main page. */
 export const priceInputSchema = z.object({
   price: z.coerce.number().positive("Enter a price greater than 0"),
@@ -25,4 +47,6 @@ export const priceInputSchema = z.object({
 });
 
 export type IncomeSettings = z.infer<typeof incomeSettingsSchema>;
+export type IncomeSource = z.infer<typeof incomeSourceSchema>;
+export type IncomeSetup = z.infer<typeof incomeSetupSchema>;
 export type PriceInput = z.infer<typeof priceInputSchema>;

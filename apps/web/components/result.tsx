@@ -2,8 +2,7 @@ import {
   formatMoney,
   hoursAsYearFraction,
   hoursToHuman,
-  type PriceToHoursResult,
-  type WorkSchedule,
+  type MultiPriceResult,
 } from "@spenditslow/core";
 
 function formatHours(hours: number): string {
@@ -19,17 +18,11 @@ function breakdownLabel(workDays: number, hours: number, minutes: number): strin
   return parts.length ? parts.join(" · ") : "less than a minute";
 }
 
-export function Result({
-  result,
-  schedule,
-  incomeCurrency,
-}: {
-  result: PriceToHoursResult;
-  schedule: WorkSchedule;
-  incomeCurrency: string;
-}) {
-  const human = hoursToHuman(result.hours, schedule);
-  const yearPct = hoursAsYearFraction(result.hours, schedule) * 100;
+export function Result({ result }: { result: MultiPriceResult }) {
+  const hoursPerWorkDay =
+    result.annualWorkDays > 0 ? result.annualHours / result.annualWorkDays : result.annualHours;
+  const human = hoursToHuman(result.hours, hoursPerWorkDay);
+  const yearPct = hoursAsYearFraction(result.hours, result.annualHours) * 100;
 
   return (
     <div className="mt-6 text-center">
@@ -37,9 +30,7 @@ export function Result({
       <p className="mt-1 font-serif text-6xl leading-none tracking-tight text-accent">
         {formatHours(result.hours)}
       </p>
-      <p className="mt-1 text-lg text-ink">
-        {result.hours === 1 ? "hour" : "hours"} of work
-      </p>
+      <p className="mt-1 text-lg text-ink">{result.hours === 1 ? "hour" : "hours"} of work</p>
 
       <p className="mt-4 text-sm text-muted">
         {breakdownLabel(human.workDays, human.hours, human.minutes)}
@@ -52,7 +43,7 @@ export function Result({
       )}
 
       <p className="mt-4 text-xs text-faint">
-        at {formatMoney(result.netHourly, incomeCurrency)}/hr take-home
+        at {formatMoney(result.netHourly, result.baseCurrency)}/hr blended take-home
       </p>
     </div>
   );

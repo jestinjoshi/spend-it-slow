@@ -3,71 +3,92 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
-  type IncomeSettings,
+  getRegion,
+  type IncomeSetup,
   isRateTableStale,
   priceInputSchema,
-  priceToHours,
-  type RateTable,
+  priceToHoursMulti,
 } from "@spenditslow/core";
 import { CURRENCIES } from "@/lib/currencies";
-import { getRates } from "@/lib/rates";
-import { loadSettings } from "@/lib/settings";
+import { getRates, type RatesResult } from "@/lib/rates";
+import { loadSetup } from "@/lib/settings";
 import { Result } from "./result";
 import { TaxInfo } from "./tax-info";
 import { Card, Field, Select, TextInput } from "./ui";
 
 export function Calculator() {
   const [hydrated, setHydrated] = useState(false);
-  const [settings, setSettings] = useState<IncomeSettings | null>(null);
+  const [setup, setSetup] = useState<IncomeSetup | null>(null);
   const [price, setPrice] = useState("");
   const [priceCurrency, setPriceCurrency] = useState("CAD");
-  const [rates, setRates] = useState<RateTable | null>(null);
+  const [ratesResult, setRatesResult] = useState<RatesResult | null>(null);
+  const rates = ratesResult?.table ?? null;
 
-  // Load saved settings once on the client.
+  // The currency results are expressed in: residency currency, else first source's.
+  const baseCurrency = useMemo(() => {
+    if (!setup) return undefined;
+    const region = setup.residencyRegionId ? getRegion(setup.residencyRegionId) : undefined;
+    return region?.currency ?? setup.sources[0]?.currency;
+  }, [setup]);
+
   useEffect(() => {
-    const saved = loadSettings();
-    setSettings(saved);
-    if (saved) setPriceCurrency(saved.currency);
+    const saved = loadSetup();
+    setSetup(saved);
     setHydrated(true);
   }, []);
 
-  // Fetch exchange rates for the income currency (and cache them for offline).
   useEffect(() => {
-    if (!settings) return;
-    getRates(settings.currency).then(setRates).catch(() => undefined);
-  }, [settings]);
+    if (baseCurrency) setPriceCurrency(baseCurrency);
+  }, [baseCurrency]);
+
+  // Fetch rates for the base currency (and cache for offline).
+  useEffect(() => {
+    if (!baseCurrency) return;
+    getRates(baseCurrency).then(setRatesResult).catch(() => undefined);
+  }, [baseCurrency]);
 
   const parsed = priceInputSchema.safeParse({ price, currency: priceCurrency });
   const priceValue = parsed.success ? parsed.data.price : null;
 
-  const needsRates = Boolean(settings && parsed.success && parsed.data.currency !== settings.currency);
-  const ratesMissing = needsRates && !rates;
-
   const result = useMemo(() => {
-    if (!settings || !parsed.success) return null;
+    if (!setup || !parsed.success) return null;
     try {
-      return priceToHours({
+      return priceToHoursMulti({
         price: parsed.data.price,
         priceCurrency: parsed.data.currency,
-        income: settings,
+        sources: setup.sources,
+        residencyRegionId: setup.residencyRegionId || undefined,
         rates: rates ?? undefined,
       });
     } catch {
       return null;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [settings, priceValue, priceCurrency, rates]);
+  }, [setup, priceValue, priceCurrency, rates]);
+
+  // Rates are needed if any source isn't in the base currency, or the price isn't.
+  const needsRates = useMemo(() => {
+    if (!setup || !parsed.success) return false;
+    const mixed = setup.sources.some((s) => s.currency !== baseCurrency);
+    return mixed || parsed.data.currency !== baseCurrency;
+  }, [setup, parsed.success, parsed.data?.currency, baseCurrency]);
+
+  const hasForeignTaxedIncome = useMemo(
+    () => Boolean(setup?.sources.some((s) => s.taxed && s.currency !== baseCurrency)),
+    [setup, baseCurrency],
+  );
 
   if (!hydrated) {
     return <Card className="text-center text-muted">Loading…</Card>;
   }
 
-  if (!settings) {
+  if (!setup) {
     return (
       <Card className="text-center">
         <h2 className="font-serif text-xl text-ink">First, set up your income</h2>
         <p className="mt-2 text-sm text-muted">
-          Tell us what you earn and we&apos;ll show every price as hours of your life.
+          Add what you earn, one source or many, and we&apos;ll show every price as hours of your
+          life.
         </p>
         <Link
           href="/settings"
@@ -79,10 +100,17 @@ export function Calculator() {
     );
   }
 
+  // Conversion is needed but we have no usable rates, so surface a real error.
+  const ratesError = needsRates && ratesResult?.status === "unavailable";
+
   return (
     <Card>
       <div className="grid grid-cols-[1fr_auto] gap-3">
-        <Field label="Price" htmlFor="price" error={price !== "" && !parsed.success ? parsed.error.issues[0]?.message : undefined}>
+        <Field
+          label="Price"
+          htmlFor="price"
+          error={price !== "" && !parsed.success ? parsed.error.issues[0]?.message : undefined}
+        >
           <TextInput
             id="price"
             inputMode="decimal"
@@ -107,23 +135,41 @@ export function Calculator() {
         </Field>
       </div>
 
-      {ratesMissing && (
+      {ratesError && (
         <p className="mt-4 rounded-lg bg-warn-soft px-3 py-2 text-xs text-warn">
-          Connect to the internet once to fetch exchange rates, or enter the price in{" "}
-          {settings.currency}.
+          {ratesResult?.reason === "service"
+            ? "The exchange-rate service is currently unavailable, so we can’t convert between currencies right now."
+            : "You appear to be offline and no exchange rates are saved yet."}{" "}
+          Please try again later, or price the item in {baseCurrency}.
         </p>
       )}
 
       {result && (
         <>
-          <Result result={result} schedule={settings.schedule} incomeCurrency={settings.currency} />
-          {needsRates && rates && (
+          <Result result={result} />
+          {setup.sources.length > 1 && (
             <p className="mt-3 text-center text-xs text-faint">
+              Blended across {setup.sources.length} income sources
+            </p>
+          )}
+          {needsRates && rates && ratesResult?.status === "stale" && (
+            <p className="mt-1 text-center text-xs text-warn">
+              {ratesResult.reason === "service"
+                ? "Exchange-rate service is down, "
+                : "Offline, "}
+              using saved rates from {rates.date}.
+            </p>
+          )}
+          {needsRates && rates && ratesResult?.status === "fresh" && (
+            <p className="mt-1 text-center text-xs text-faint">
               Exchange rates as of {rates.date}
               {isRateTableStale(rates, 7) ? " (may be outdated)" : ""}
             </p>
           )}
-          <TaxInfo regionId={settings.regionId} />
+          <TaxInfo
+            residencyRegionId={setup.residencyRegionId}
+            hasForeignIncome={hasForeignTaxedIncome}
+          />
         </>
       )}
     </Card>
