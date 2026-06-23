@@ -6,6 +6,7 @@ import {
   getRegion,
   type IncomeSetup,
   isRateTableStale,
+  type MultiPriceResult,
   priceInputSchema,
   priceToHoursMulti,
 } from "@spenditslow/core";
@@ -23,6 +24,9 @@ export function Calculator() {
   const [priceCurrency, setPriceCurrency] = useState("CAD");
   const [ratesResult, setRatesResult] = useState<RatesResult | null>(null);
   const rates = ratesResult?.table ?? null;
+  // The most recent non-null result, kept mounted while the wrapper collapses
+  // so it shrinks away smoothly instead of vanishing.
+  const [lastResult, setLastResult] = useState<MultiPriceResult | null>(null);
 
   // The currency results are expressed in: residency currency, else first source's.
   const baseCurrency = useMemo(() => {
@@ -78,6 +82,12 @@ export function Calculator() {
     [setup, baseCurrency],
   );
 
+  useEffect(() => {
+    if (result) setLastResult(result);
+  }, [result]);
+  // Show the current result when present, otherwise the last one (during collapse).
+  const displayed = result ?? lastResult;
+
   if (!hydrated) {
     return <Card className="text-center text-muted">Loading…</Card>;
   }
@@ -113,6 +123,7 @@ export function Calculator() {
         >
           <TextInput
             id="price"
+            autoComplete="off"
             inputMode="decimal"
             placeholder="0.00"
             value={price}
@@ -144,34 +155,38 @@ export function Calculator() {
         </p>
       )}
 
-      {result && (
-        <>
-          <Result result={result} />
-          {setup.sources.length > 1 && (
-            <p className="mt-3 text-center text-xs text-faint">
-              Blended across {setup.sources.length} income sources
-            </p>
+      <div className={`reveal ${result ? "is-open" : ""}`}>
+        <div>
+          {displayed && (
+            <>
+              <Result result={displayed} />
+              {setup.sources.length > 1 && (
+                <p className="mt-3 text-center text-xs text-faint">
+                  Blended across {setup.sources.length} income sources
+                </p>
+              )}
+              {needsRates && rates && ratesResult?.status === "stale" && (
+                <p className="mt-1 text-center text-xs text-warn">
+                  {ratesResult.reason === "service"
+                    ? "Exchange-rate service is down, "
+                    : "Offline, "}
+                  using saved rates from {rates.date}.
+                </p>
+              )}
+              {needsRates && rates && ratesResult?.status === "fresh" && (
+                <p className="mt-1 text-center text-xs text-faint">
+                  Exchange rates as of {rates.date}
+                  {isRateTableStale(rates, 7) ? " (may be outdated)" : ""}
+                </p>
+              )}
+              <TaxInfo
+                residencyRegionId={setup.residencyRegionId}
+                hasForeignIncome={hasForeignTaxedIncome}
+              />
+            </>
           )}
-          {needsRates && rates && ratesResult?.status === "stale" && (
-            <p className="mt-1 text-center text-xs text-warn">
-              {ratesResult.reason === "service"
-                ? "Exchange-rate service is down, "
-                : "Offline, "}
-              using saved rates from {rates.date}.
-            </p>
-          )}
-          {needsRates && rates && ratesResult?.status === "fresh" && (
-            <p className="mt-1 text-center text-xs text-faint">
-              Exchange rates as of {rates.date}
-              {isRateTableStale(rates, 7) ? " (may be outdated)" : ""}
-            </p>
-          )}
-          <TaxInfo
-            residencyRegionId={setup.residencyRegionId}
-            hasForeignIncome={hasForeignTaxedIncome}
-          />
-        </>
-      )}
+        </div>
+      </div>
     </Card>
   );
 }

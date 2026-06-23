@@ -35,6 +35,75 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Gentle, default smoothing for interactive controls (hover, focus rings). */
+button,
+a,
+input,
+select,
+textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+}
+
+/* Entry animations. */
+@keyframes sis-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sis-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Page-level entry transition: re-runs on each navigation via app/template.tsx. */
+.page-enter {
+  animation: sis-fade-in-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Softer fade for content that appears in place (the income cards). */
+.enter-soft {
+  animation: sis-fade-in 500ms ease-out both;
+}
+
+/*
+  Collapse/expand wrapper: animates the card's height on every change by
+  transitioning grid-template-rows between 0fr (collapsed) and 1fr (its auto
+  content height), with a fade. Because it's a transition (not a one-shot
+  keyframe), it animates both ways: growing in and shrinking out. The result is
+  kept mounted while collapsing so it shrinks away smoothly instead of vanishing.
+*/
+.reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 500ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 350ms ease;
+}
+
+.reveal.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+/* The single grid child must be able to clip and collapse. */
+.reveal > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Respect users who don't want motion. */
 @media (prefers-reduced-motion: reduce) {
   *,

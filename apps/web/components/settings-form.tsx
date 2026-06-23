@@ -76,7 +76,7 @@ export function SettingsForm() {
       {fields.map((field, index) => {
         const sourceErrors = errors.sources?.[index];
         return (
-          <Card key={field.id} className="flex flex-col gap-4">
+          <Card key={field.id} className="flex flex-col gap-4 enter-soft">
             <div className="flex items-center justify-between gap-2">
               <input
                 {...register(`sources.${index}.label`)}
