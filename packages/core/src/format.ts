@@ -7,7 +7,7 @@ export interface HumanDuration {
 /**
  * Break a raw hours figure into work-days / hours / minutes, where a "work day"
  * is `hoursPerWorkDay` long (derived from the user's schedule, or a blended
- * figure across multiple income sources) — so the breakdown matches how they
+ * figure across multiple income sources), so the breakdown matches how they
  * actually work rather than a fixed 8-hour day.
  */
 export function hoursToHuman(totalHours: number, hoursPerWorkDay: number): HumanDuration {

@@ -2,7 +2,7 @@
   "name": "spenditslow",
   "version": "0.0.0",
   "private": true,
-  "description": "Spend it slow — see any price as the hours of your life it really costs.",
+  "description": "Spend it slow: see any price as the hours of your life it really costs.",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=20"

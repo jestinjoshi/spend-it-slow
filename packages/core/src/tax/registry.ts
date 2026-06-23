@@ -3,7 +3,7 @@ import { caOn } from "./regions/ca-on";
 
 /**
  * Every supported region. To add a new one: create a file in `regions/`,
- * import it here, and add it to this array. Nothing else needs to change —
+ * import it here, and add it to this array. Nothing else needs to change,
  * the UI discovers regions through `listRegions()`.
  */
 const REGIONS: TaxRegion[] = [

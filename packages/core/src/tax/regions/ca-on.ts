@@ -2,7 +2,7 @@ import { cappedContribution, nonRefundableCredit, progressiveTax } from "../engi
 import type { TaxBracket, TaxRegion } from "../types";
 
 /**
- * Ontario, Canada — 2026 tax year.
+ * Ontario, Canada: 2026 tax year.
  *
  * Figures below are the indexed 2026 federal and Ontario amounts (CRA 2.0%
  * federal / 1.9% Ontario indexation). Sources:
@@ -13,7 +13,7 @@ import type { TaxBracket, TaxRegion } from "../types";
  * This estimates take-home pay = gross − (federal income tax + Ontario income
  * tax incl. surtax + CPP base + CPP2 + EI). It intentionally does NOT model the
  * federal CPP/EI tax credits or the enhanced-CPP income deduction, so it errs
- * slightly high on tax (a little low on net) — fine for a "what does it cost"
+ * slightly high on tax (a little low on net), fine for a "what does it cost"
  * estimate. Update these constants and `validUntil` each tax year.
  */
 

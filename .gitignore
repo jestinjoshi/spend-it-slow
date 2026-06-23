@@ -19,6 +19,9 @@ apps/web/public/swe-worker-*.js
 # test
 coverage/
 
+# typescript incremental build cache
+*.tsbuildinfo
+
 # env / local
 .env
 .env.*

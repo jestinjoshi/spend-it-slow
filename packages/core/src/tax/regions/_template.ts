@@ -1,5 +1,5 @@
 /**
- * Region template — copy this file to add support for a new place.
+ * Region template: copy this file to add support for a new place.
  *
  * Checklist:
  *  1. Copy to `regions/<country>-<region>.ts` (e.g. "us-ca.ts", "uk.ts").
@@ -8,7 +8,7 @@
  *     should next be reviewed.
  *  3. Register it in `registry.ts`.
  *  4. Add a test next to the file (copy `ca-on.test.ts`) with fixtures that
- *     assert the invariants — CI will not accept a region without tests.
+ *     assert the invariants. CI will not accept a region without tests.
  *
  * Keep `computeNetAnnual` PURE: gross in, result out. No dates, no I/O.
  */

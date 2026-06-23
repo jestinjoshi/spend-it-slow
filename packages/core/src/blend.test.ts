@@ -12,7 +12,7 @@ const taxedCad = (amount: number): BlendSource => ({
   taxed: true,
 });
 
-describe("blendIncome — single tax residency", () => {
+describe("blendIncome: single tax residency", () => {
   it("uses the residency currency as the base", () => {
     const blend = blendIncome([taxedCad(80_000)], "ca-on");
     expect(blend.baseCurrency).toBe("CAD");
@@ -47,7 +47,7 @@ describe("blendIncome — single tax residency", () => {
   });
 });
 
-describe("blendIncome — worldwide income (Ontario resident)", () => {
+describe("blendIncome: worldwide income (Ontario resident)", () => {
   // Ontario resident earning from Vancouver (CAD), San Francisco (USD), Mumbai (INR).
   const rates: RateTable = {
     base: "CAD",

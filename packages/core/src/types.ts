@@ -6,7 +6,7 @@ export type PayPeriod = (typeof PAY_PERIODS)[number];
 /**
  * The work-schedule assumptions used to translate between pay periods and
  * an hourly figure. These are deliberately user-editable and surfaced in the
- * UI — the final "hours" number is only as honest as these values.
+ * UI. The final "hours" number is only as honest as these values.
  */
 export interface WorkSchedule {
   /** Paid hours worked in a typical week. */

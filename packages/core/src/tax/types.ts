@@ -18,7 +18,7 @@ export interface TaxResult {
 
 /**
  * A self-contained tax region. Adding support for a new place means
- * implementing this interface in `regions/` and registering it — see
+ * implementing this interface in `regions/` and registering it, see
  * `regions/_template.ts` and docs/adding-a-region.md.
  */
 export interface TaxRegion {

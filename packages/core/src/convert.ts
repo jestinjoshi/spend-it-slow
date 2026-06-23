@@ -59,7 +59,7 @@ export interface BlendedIncome {
 /**
  * Combine multiple income sources into a single blended take-home hourly rate,
  * modelling a single **tax residency**: all gross (taxed) sources are converted
- * to the residency currency, summed, and taxed once with stacked brackets —
+ * to the residency currency, summed, and taxed once with stacked brackets,
  * matching how a tax resident is taxed on worldwide income. Sources flagged as
  * already take-home are converted and added on top, untaxed.
  *

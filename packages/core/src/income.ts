@@ -30,7 +30,7 @@ export function toAnnualGross(
 }
 
 /**
- * Convert a net (after-tax) annual figure into a net hourly rate — the number
+ * Convert a net (after-tax) annual figure into a net hourly rate, the number
  * the calculator divides a price by.
  */
 export function netHourlyFromAnnual(netAnnual: number, schedule: WorkSchedule): number {
