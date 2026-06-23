@@ -2,9 +2,11 @@
 
 > See any price as the hours of your life it really costs.
 
+**[Live demo →](https://spend-it-slow.vercel.app/)**
+
 A free, open-source, privacy-first calculator that converts prices into the
 amount of work time you'd need to afford them, accounting for your real
-**after-tax** income. No accounts, no tracking, works offline.
+**after-tax** income. No accounts, no cookies, works offline.
 
 Inspired by the film *In Time*, where everything is paid for with time.
 
@@ -59,6 +61,16 @@ Caveat: foreign income is estimated at your residency's rates. This ignores
 foreign tax credits and higher source-country taxes, so for income earned abroad
 the real tax may be **higher**, so treat it as a floor. Modelling that fully would
 require tax engines for each country.
+
+## Privacy
+
+No accounts, and your income details never leave your device. They're stored in
+your browser's `localStorage`, not on any server.
+
+The only data collected is anonymous, cookieless aggregate traffic via
+[Vercel Web Analytics](https://vercel.com/docs/analytics) (page views, referrers,
+country, device type) to gauge usage. No personal data, no cross-site tracking,
+and no consent banner required.
 
 ## License
 
