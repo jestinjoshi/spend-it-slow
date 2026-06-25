@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getRegion,
   type IncomeSetup,
@@ -13,7 +13,9 @@ import {
 import { CURRENCIES } from "@/lib/currencies";
 import { getRates, type RatesResult } from "@/lib/rates";
 import { loadSetup } from "@/lib/settings";
+import { BUYMEACOFFEE_URL, disableNudge, recordCalculation } from "@/lib/support-nudge";
 import { Result } from "./result";
+import { SupportNudge } from "./support-nudge";
 import { TaxInfo } from "./tax-info";
 import { Card, Field, Select, TextInput } from "./ui";
 
@@ -27,6 +29,8 @@ export function Calculator() {
   // The most recent non-null result, kept mounted while the wrapper collapses
   // so it shrinks away smoothly instead of vanishing.
   const [lastResult, setLastResult] = useState<MultiPriceResult | null>(null);
+  const [showNudge, setShowNudge] = useState(false);
+  const lastCountedRef = useRef("");
 
   // The currency results are expressed in: residency currency, else first source's.
   const baseCurrency = useMemo(() => {
@@ -88,6 +92,18 @@ export function Calculator() {
   // Show the current result when present, otherwise the last one (during collapse).
   const displayed = result ?? lastResult;
 
+  // Count each distinct, settled calculation; nudge for support every 15th one.
+  useEffect(() => {
+    if (!result || priceValue == null) return;
+    const key = `${priceValue}-${priceCurrency}`;
+    const id = setTimeout(() => {
+      if (lastCountedRef.current === key) return;
+      lastCountedRef.current = key;
+      if (recordCalculation()) setShowNudge(true);
+    }, 1000);
+    return () => clearTimeout(id);
+  }, [result, priceValue, priceCurrency]);
+
   if (!hydrated) {
     return <Card className="text-center text-muted">Loading…</Card>;
   }
@@ -112,6 +128,16 @@ export function Calculator() {
 
   // Conversion is needed but we have no usable rates, so surface a real error.
   const ratesError = needsRates && ratesResult?.status === "unavailable";
+
+  const handleSure = () => {
+    window.open(BUYMEACOFFEE_URL, "_blank", "noopener,noreferrer");
+    disableNudge();
+    setShowNudge(false);
+  };
+  const handleNever = () => {
+    disableNudge();
+    setShowNudge(false);
+  };
 
   return (
     <Card>
@@ -187,6 +213,13 @@ export function Calculator() {
           )}
         </div>
       </div>
+
+      <SupportNudge
+        open={showNudge}
+        onSure={handleSure}
+        onLater={() => setShowNudge(false)}
+        onNever={handleNever}
+      />
     </Card>
   );
 }

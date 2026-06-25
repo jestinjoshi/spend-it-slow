@@ -1,3 +1,4 @@
+import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { SettingsForm } from "@/components/settings-form";
 
@@ -13,6 +14,7 @@ export default function SettingsPage() {
         <h1 className="mb-6 font-serif text-2xl tracking-tight text-ink">Settings</h1>
         <SettingsForm />
       </section>
+      <Footer />
     </main>
   );
 }

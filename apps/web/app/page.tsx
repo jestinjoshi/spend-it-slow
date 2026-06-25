@@ -1,4 +1,5 @@
 import { Calculator } from "@/components/calculator";
+import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 
 export default function HomePage() {
@@ -16,9 +17,7 @@ export default function HomePage() {
         </div>
         <Calculator />
       </section>
-      <footer className="mx-auto w-full max-w-md px-5 pb-6 text-center text-xs text-faint">
-        Free &amp; open source · works offline · spend it slow
-      </footer>
+      <Footer />
     </main>
   );
 }
