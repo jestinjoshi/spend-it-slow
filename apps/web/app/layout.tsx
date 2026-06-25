@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   title: "Spend It Slow",
   description: "See any price as the hours of your life it really costs.",
   applicationName: "Spend It Slow",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
   appleWebApp: {
     capable: true,
     title: "Spend It Slow",
