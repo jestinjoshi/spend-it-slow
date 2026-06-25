@@ -1,25 +1,29 @@
 import Link from "next/link";
+import { InstallButton } from "./install-button";
 
-/** App header: wordmark on the left, a settings gear on the right. */
+/** App header: wordmark on the left, install pill + settings gear on the right. */
 export function Header({ showSettings = true }: { showSettings?: boolean }) {
   return (
     <header className="mx-auto flex w-full max-w-md items-center justify-between px-5 pt-6">
       <Link href="/" className="font-serif text-lg tracking-tight text-ink">
         Spend It Slow
       </Link>
-      {showSettings ? (
-        <Link
-          href="/settings"
-          aria-label="Settings"
-          className="rounded-full border border-line bg-card p-2 text-muted transition hover:text-accent"
-        >
-          <GearIcon />
-        </Link>
-      ) : (
-        <Link href="/" aria-label="Back" className="text-sm text-muted hover:text-accent">
-          Done
-        </Link>
-      )}
+      <div className="flex items-center gap-2">
+        <InstallButton />
+        {showSettings ? (
+          <Link
+            href="/settings"
+            aria-label="Settings"
+            className="rounded-full border border-line bg-card p-2 text-muted transition hover:text-accent"
+          >
+            <GearIcon />
+          </Link>
+        ) : (
+          <Link href="/" aria-label="Back" className="text-sm text-muted hover:text-accent">
+            Done
+          </Link>
+        )}
+      </div>
     </header>
   );
 }
